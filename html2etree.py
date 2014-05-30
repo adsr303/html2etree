@@ -7,17 +7,22 @@ import xml.etree.ElementTree as ET
 
 
 class HTML2ETree(HTMLParser):
-    """HTML parser that attempts to build an ElementTree."""
+    """Parse HTML documents to ElementTrees."""
 
-    def __init__(self):
+    def __init__(self, backtrack=False):
+        """Create an HTML2ETree instance.
+
+        backtrack - if true, try to recover from missing closing tags.
+        """
         HTMLParser.__init__(self)
+        self._backtrack = backtrack
         self._tree = None
         self._stack = []
         self._text = None
         self._tail = None  # Last-ended element in scope, if any
 
     @classmethod
-    def parse(cls, source):
+    def parse(cls, source, backtrack=False):
         """Parse an external HTML document into an ElementTree.
 
         source - a filename or a file-like object.
@@ -25,19 +30,19 @@ class HTML2ETree(HTMLParser):
         try:
             f = open(source)
         except TypeError:
-            return cls.fromstringlist(source)
+            return cls.fromstringlist(source, backtrack)
         with f:
-            return cls.fromstringlist(f)
+            return cls.fromstringlist(f, backtrack)
 
     @classmethod
-    def fromstring(cls, text):
+    def fromstring(cls, text, backtrack=False):
         """Parse HTML into an ElementTree from string constant."""
-        return cls.fromstringlist([text])
+        return cls.fromstringlist([text], backtrack)
 
     @classmethod
-    def fromstringlist(cls, sequence):
+    def fromstringlist(cls, sequence, backtrack=False):
         """Parse HTML into an ElementTree from a sequence of strings."""
-        parser = cls()
+        parser = cls(backtrack)
         for text in sequence:
             if isinstance(text, bytes):
                 text = str(text, 'utf-8')  # TODO encoding?
@@ -56,8 +61,9 @@ class HTML2ETree(HTMLParser):
     def handle_endtag(self, tag):
         self._settext()
         self._tail = self._stack.pop()
-        # TODO May need some heuristics to track back up (c.f. <br> or <hr>).
-        #assert self._tail.tag == tag
+        if self._backtrack:
+            while self._tail.tag != tag:
+                self._tail = self._stack.pop()
 
     def handle_startendtag(self, tag, attrs):
         self._tail = self._handle_start_sub(tag, attrs)
@@ -97,7 +103,7 @@ class HTML2ETree(HTMLParser):
         children elements, set last child's tail.
         """
         if self._text:
-            if self._tail:
+            if self._tail is not None:
                 self._tail.tail = self._text.getvalue()
             elif self._stack:
                 self._top().text = self._text.getvalue()
@@ -123,5 +129,6 @@ class HTML2ETree(HTMLParser):
 if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1:
-        tree = HTML2ETree.parse(sys.argv[1])
+        backtrack = len(sys.argv) > 2 and bool(sys.argv[2])
+        tree = HTML2ETree.parse(sys.argv[1], backtrack)
         print(str(ET.tostring(tree.getroot(), 'utf-8'), 'utf-8'))
