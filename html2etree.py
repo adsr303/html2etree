@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from html.entities import entitydefs
 from html.parser import HTMLParser
 from io import StringIO
@@ -52,9 +54,10 @@ class HTML2ETree(HTMLParser):
         self._tail = None
 
     def handle_endtag(self, tag):
+        self._settext()
         self._tail = self._stack.pop()
         # TODO May need some heuristics to track back up (c.f. <br> or <hr>).
-        assert self._tail.tag == tag
+        #assert self._tail.tag == tag
 
     def handle_startendtag(self, tag, attrs):
         self._tail = self._handle_start_sub(tag, attrs)
@@ -96,7 +99,7 @@ class HTML2ETree(HTMLParser):
         if self._text:
             if self._tail:
                 self._tail.tail = self._text.getvalue()
-            else:
+            elif self._stack:
                 self._top().text = self._text.getvalue()
             self._text = None
 
@@ -115,3 +118,10 @@ class HTML2ETree(HTMLParser):
         self._settext()
         self._tail = elem
         self._top().append(elem)
+
+
+if __name__ == '__main__':
+    import sys
+    if len(sys.argv) > 1:
+        tree = HTML2ETree.parse(sys.argv[1])
+        print(str(ET.tostring(tree.getroot(), 'utf-8'), 'utf-8'))
