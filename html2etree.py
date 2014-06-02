@@ -33,9 +33,9 @@ class HTML2ETree(HTMLParser):
         try:
             f = open(source)
         except TypeError:
-            return cls.fromstringlist(source, backtrack)
+            return cls.fromstringlist(source, backtrack, strict)
         with f:
-            return cls.fromstringlist(f, backtrack)
+            return cls.fromstringlist(f, backtrack, strict)
 
     @classmethod
     def fromstring(cls, text, backtrack=False, strict=True):
@@ -45,7 +45,7 @@ class HTML2ETree(HTMLParser):
         backtrack - if True, try to recover from missing closing tags.
         strict - set to False to be tolerant about invalid HTML.
         """
-        return cls.fromstringlist([text], backtrack)
+        return cls.fromstringlist([text], backtrack, strict)
 
     @classmethod
     def fromstringlist(cls, sequence, backtrack=False, strict=True):
