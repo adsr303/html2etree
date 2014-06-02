@@ -1,5 +1,18 @@
 #!/usr/bin/env python3
 
+
+"""A parser for HTML that builds ElementTrees.
+
+Read HTML and use ElementTree API to navigate and analyze it.
+
+>>> tree = HTML2ETree.fromstring('''<html><body>
+...         <a href="https://github.com/adsr303/html2etree">
+...         </body></html>''')
+>>> tree.find('.//a[1]').get('href')
+'https://github.com/adsr303/html2etree'
+"""
+
+
 from html.entities import entitydefs
 from html.parser import HTMLParser
 from io import StringIO
@@ -24,7 +37,7 @@ class HTML2ETree(HTMLParser):
 
     @classmethod
     def parse(cls, source, backtrack=False, strict=True):
-        """Parse an external HTML document into an ElementTree.
+        """Parse an external HTML document to an ElementTree.
 
         source - a filename or a file-like object.
         backtrack - if True, try to recover from missing closing tags.
@@ -39,7 +52,7 @@ class HTML2ETree(HTMLParser):
 
     @classmethod
     def fromstring(cls, text, backtrack=False, strict=True):
-        """Parse HTML into an ElementTree from string constant.
+        """Parse HTML in a string constant to an ElementTree.
 
         text - a string with HTML to be parsed.
         backtrack - if True, try to recover from missing closing tags.
@@ -49,7 +62,7 @@ class HTML2ETree(HTMLParser):
 
     @classmethod
     def fromstringlist(cls, sequence, backtrack=False, strict=True):
-        """Parse HTML into an ElementTree from a sequence of strings.
+        """Parse HTML in a sequence of strings to an ElementTree.
 
         sequence - a sequence of strings that contain the HTML to be parsed.
         backtrack - if True, try to recover from missing closing tags.
