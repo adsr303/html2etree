@@ -9,12 +9,13 @@ import xml.etree.ElementTree as ET
 class HTML2ETree(HTMLParser):
     """Parse HTML documents to ElementTrees."""
 
-    def __init__(self, backtrack=False):
+    def __init__(self, backtrack=False, strict=True):
         """Create an HTML2ETree instance.
 
-        backtrack - if true, try to recover from missing closing tags.
+        backtrack - if True, try to recover from missing closing tags.
+        strict - set to False to be tolerant about invalid HTML.
         """
-        HTMLParser.__init__(self)
+        HTMLParser.__init__(self, strict)
         self._backtrack = backtrack
         self._tree = None
         self._stack = []
@@ -22,10 +23,12 @@ class HTML2ETree(HTMLParser):
         self._tail = None  # Last-ended element in scope, if any
 
     @classmethod
-    def parse(cls, source, backtrack=False):
+    def parse(cls, source, backtrack=False, strict=True):
         """Parse an external HTML document into an ElementTree.
 
         source - a filename or a file-like object.
+        backtrack - if True, try to recover from missing closing tags.
+        strict - set to False to be tolerant about invalid HTML.
         """
         try:
             f = open(source)
@@ -35,14 +38,24 @@ class HTML2ETree(HTMLParser):
             return cls.fromstringlist(f, backtrack)
 
     @classmethod
-    def fromstring(cls, text, backtrack=False):
-        """Parse HTML into an ElementTree from string constant."""
+    def fromstring(cls, text, backtrack=False, strict=True):
+        """Parse HTML into an ElementTree from string constant.
+
+        text - a string with HTML to be parsed.
+        backtrack - if True, try to recover from missing closing tags.
+        strict - set to False to be tolerant about invalid HTML.
+        """
         return cls.fromstringlist([text], backtrack)
 
     @classmethod
-    def fromstringlist(cls, sequence, backtrack=False):
-        """Parse HTML into an ElementTree from a sequence of strings."""
-        parser = cls(backtrack)
+    def fromstringlist(cls, sequence, backtrack=False, strict=True):
+        """Parse HTML into an ElementTree from a sequence of strings.
+
+        sequence - a sequence of strings that contain the HTML to be parsed.
+        backtrack - if True, try to recover from missing closing tags.
+        strict - set to False to be tolerant about invalid HTML.
+        """
+        parser = cls(backtrack, strict)
         for text in sequence:
             if isinstance(text, bytes):
                 text = str(text, 'utf-8')  # TODO encoding?
